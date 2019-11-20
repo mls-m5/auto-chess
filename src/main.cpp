@@ -17,16 +17,25 @@ map<char, std::pair<string, string> > graphics = {
 
 class Board {
 public:
-	char operator()(int x, int y) {
+	struct BoardData {
+		char type = 0;
+		int player = 0;
+	};
+
+	BoardData operator()(int x, int y) const {
 		return _data[x + _width * y];
 	}
+
 
 	Board() {
 		_data.resize(_width * _height);
 		for (int i = 0; i < _width; ++i) {
-			_data[i + _width * 1] = 'p';
-			_data[i + _width * (_height - 2)] = 'p';
+			_data[i + _width * 1] = {'p', 1};
+			_data[i + _width * (_height - 2)] = {'p', 2};
 		}
+
+		setLine(0, "rnbqkbnr", 1);
+		setLine(7, "rnbqkbnr", 2);
 	}
 
 	void print() {
@@ -40,12 +49,14 @@ public:
 				else {
 					cout << light;
 				}
-				auto c = (*this)(x, y);
+				auto c = (*this)(x, y).type;
+				auto player = (*this)(x, y).player;
 				if (c == 0) {
 					cout << "   ";
 				}
 				else {
-					cout << " "s + graphics[c].first + " "s;
+					auto g = (player == 1)? graphics[c].first: graphics[c].second;
+					cout << " "s + g + " "s;
 				}
 			}
 			cout << "\e[0m" << endl; // Reset colors and newline
@@ -53,7 +64,18 @@ public:
 	}
 
 private:
-	vector <char> _data;
+
+	BoardData &operator()(int x, int y) {
+		return _data[x + _width * y];
+	}
+
+	void setLine(int y, string content, int player) {
+		for (int x = 0; x < _width && x < content.size(); ++x) {
+			(*this)(x, y) = {content[x], player};
+		}
+	}
+
+	vector <BoardData> _data;
 	int _width = 8;
 	int _height = 8;
 };
