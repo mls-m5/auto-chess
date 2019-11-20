@@ -1,0 +1,11 @@
+
+
+includes += ../src ../include
+flags += -g
+config += c++17
+
+move_test.src += %.cpp
+move_test.src += ../src/board.cpp
+
+
+

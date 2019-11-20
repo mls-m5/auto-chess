@@ -1,0 +1,10 @@
+*.o
+*.d
+chess
+
+.cproject
+.project
+.settings/
+.vscode/
+tests/*_test
+
