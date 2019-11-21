@@ -1,12 +1,17 @@
 
 # build settings is in file 'Matmakefile'
 
+m=matmake/matmake
 
-all:
+all: $m
 	@echo using Matmake buildsystem
 	@echo for more options use 'matmake -h'
-	matmake
+	$m
 
 clean:
-	matmake clean
+	$m clean
+	
+	
+$m:
+	make -C matmake matmake
 
