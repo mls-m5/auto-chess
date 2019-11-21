@@ -8,3 +8,5 @@ chess
 .vscode/
 tests/*_test
 
+agents/human
+

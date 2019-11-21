@@ -1,0 +1,10 @@
+
+config = c++17
+flags += -lstdc++fs
+includes = ../include ../src
+
+flags += -g
+
+human.src = %.cpp
+human.src += ../src/remoteboard.cpp ../src/fifoconnection.cpp
+

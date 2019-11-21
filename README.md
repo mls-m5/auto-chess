@@ -32,6 +32,18 @@ make -j
 Design pattern
 ============
 
+Server:
+```
+Board --> RemoteAgent --> IConnection --> Implemented connection 
+```
+
+Client:
+```
+Agent --> RemoteBoard --> IConnection --> Implemented connection
+```
+
+
+
 ## Agents
 An agent is a human or computer that acts on the board (a player)
 

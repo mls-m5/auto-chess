@@ -2,10 +2,12 @@
 # Matmake file
 # https://github.com/mls-m5/matmake
 
-cppflags += -std=c++14      # c++ only flags
+cppflags += -std=c++17      # c++ only flags
 cflags +=                   # c only flags
 
 # global flags:
+
+flags += -lstdc++fs
 flags += -W -Wall -Wno-unused-parameter -Wno-sign-compare #-Werror
 flags += -g
 
@@ -14,7 +16,7 @@ chess.includes +=
     include
 chess.src =
     src/*.cpp
-
-#
+chess.libs += -pthread
 
 external tests
+external agents

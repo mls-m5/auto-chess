@@ -1,3 +1,4 @@
+// Copyright Mattias Larsson Sköld 2019
 
 #include "iboard.h"
 #include <vector>
@@ -31,7 +32,12 @@ public:
 	}
 
 	BoardData operator()(int x, int y) const override {
-		return _data[x + _width * y];
+		if (isInside(x, y)) {
+			return _data[x + _width * y];
+		}
+		else {
+			return {'x', 0};
+		}
 	}
 
 	auto &get(int x, int y) {
@@ -42,7 +48,7 @@ public:
 		return (*this)(x, y);
 	}
 
-	bool isInside(int x, int y) {
+	bool isInside(int x, int y) const {
 		return x >= 0 && x < _width && y >= 0 && y <= _height;
 	}
 
@@ -237,7 +243,7 @@ public:
 		_disableColors = true;
 	}
 
-	const BoardState state() override {
+	BoardState state() const override {
 		return _data;
 	}
 
