@@ -21,7 +21,6 @@ class Board: public IBoard {
 public:
 
 	Board() {
-		_data.resize(_width * _height);
 		for (int i = 0; i < _width; ++i) {
 			_data[i + _width * 1] = {'p', 1};
 			_data[i + _width * (_height - 2)] = {'p', 2};
@@ -193,49 +192,53 @@ public:
 		}
 	}
 
-	void print() const override{
+	void print(std::ostream &stream = cout) const override{
 		string light = "\e[48;2;50;50;50m";
 		string dark = "\e[48;2;0;0;0m";
 		if (_disableColors) {
 			light = "";
 			dark = "";
 		}
-		cout << " ";
+		stream << " ";
 		for (int x = 0; x < _width; ++x) {
-			cout << " " << (char)('a' + x) << " ";
+			stream << " " << (char)('a' + x) << " ";
 		}
-		cout << endl;
+		stream << endl;
 		for (int y = _height - 1; y >= 0; --y) {
-			cout << y + 1;
+			stream << y + 1;
 			for (int x = 0; x < _width; ++x) {
 				if ((y % 2) != (x % 2)) {
-					cout << dark;
+					stream << dark;
 				}
 				else {
-					cout << light;
+					stream << light;
 				}
 				auto c = (*this)(x, y).type;
 				auto player = (*this)(x, y).player;
 				if (c == 0) {
-					cout << "   ";
+					stream << "   ";
 				}
 				else {
 					auto g = (player == 2)? graphics[c].first: graphics[c].second;
-					cout << " "s + g + " "s;
+					stream << " "s + g + " "s;
 				}
 			}
 			if (_disableColors) {
-				cout << endl;
+				stream << endl;
 			}
 			else {
-				cout << "\e[0m" << endl; // Reset colors and newline
+				stream << "\e[0m" << endl; // Reset colors and newline
 			}
 		}
-		cout << endl;
+		stream << endl;
 	}
 
 	void disableColors() override {
 		_disableColors = true;
+	}
+
+	const BoardState state() override {
+		return _data;
 	}
 
 private:
@@ -251,13 +254,13 @@ private:
 		return _data[x + _width * y];
 	}
 
-	void setLine(int y, string content, int player) {
+	void setLine(int y, string content, char player) {
 		for (int x = 0; x < _width && x < content.size(); ++x) {
 			(*this)(x, y) = {content[x], player};
 		}
 	}
 
-	vector <BoardData> _data;
+	array <BoardData, 8*8> _data;
 	int _width = 8;
 	int _height = 8;
 	int _currentPlayer = 1;
