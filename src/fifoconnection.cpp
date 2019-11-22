@@ -21,6 +21,9 @@ public:
 		openOutputFile();
 //		cout << "sending line: " << line; cout.flush();
 		_output << line;
+		if (line.back() != '\n') {
+			_output << endl;
+		}
 		_output.flush();
 	}
 

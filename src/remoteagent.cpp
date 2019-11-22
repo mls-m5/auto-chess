@@ -76,8 +76,34 @@ void RemoteAgent::startThread() {
 			}
 			_connection.sendLine(stringState);
 		}
+		if (isCommand(line, "connect")) {
+			istringstream ss(line);
+			string command, name, password;
+			ss >> command >> name >> password;
+			_connection.sendLine(to_string(_board.connect(name, password)) + "\n");
+		}
 		if (isCommand(line, "disconnect")) {
 			throw runtime_error("player disconnected");
+		}
+		if (isCommand(line, "wait")) {
+			if (line == "wait") {
+				_board.wait(PlayerNum::None);
+				_connection.sendLine("ok\n");
+			}
+			else {
+				istringstream ss(line);
+				string command;
+				int player;
+				ss >> command >> player;
+				_board.wait(static_cast<PlayerNum>(player));
+				_connection.sendLine("ok\n");
+			}
+		}
+		if (isCommand(line, "player")) {
+			_connection.sendLine(to_string(_board.player()) + "\n");
+		}
+		if (isCommand(line, "colors")) {
+			_board.disableColors();
 		}
 	}
 }

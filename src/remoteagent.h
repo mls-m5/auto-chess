@@ -8,6 +8,8 @@
 #pragma once
 
 #include <thread>
+#include <string>
+#include <array>
 
 class IBoard;
 class IConnection;
@@ -22,6 +24,9 @@ private:
 	IBoard &_board;
 	IConnection &_connection;
 	std::thread _thread;
+
+	std::string name;
+	char playerNumber;
 };
 
 

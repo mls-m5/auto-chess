@@ -89,11 +89,28 @@ public:
 				i < state.size() * 2 && i < response.size();
 				i += 2) {
 			auto piece = response[i];
-			auto player = response[i + 1] - '0';
+			char player = response[i + 1] - '0';
 			piece = (piece == ' ')? 0: piece;
 			state[i] = BoardData {piece, player};
 		}
 		return state;
+	}
+
+	void wait(PlayerNum player) override {
+		ostringstream ss;
+		ss << "wait " << player << endl;
+		_connection.sendLine(ss.str());
+		_connection.readLine();
+	}
+
+	PlayerNum player() override {
+		_connection.sendLine("player");
+		return static_cast<PlayerNum>(stoi(_connection.readLine()));
+	}
+
+	virtual PlayerNum connect(std::string name, std::string password) override {
+		_connection.sendLine("connect " + name + " " + password);
+		return static_cast<PlayerNum>(stoi(_connection.readLine()));
 	}
 
 private:

@@ -6,5 +6,5 @@ includes = ../include ../src
 flags += -g
 
 human.src = %.cpp
-human.src += ../src/remoteboard.cpp ../src/fifoconnection.cpp
+human.src += remoteboard.cpp ../src/fifoconnection.cpp
 

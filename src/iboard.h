@@ -5,6 +5,12 @@
 #include <array>
 #include <iostream>
 
+enum PlayerNum: char {
+	None,
+	Player1 = 1,
+	Player2 = 2
+};
+
 class IBoard {
 	public:
 
@@ -14,6 +20,7 @@ class IBoard {
 		char type = 0;
 		char player = 0;
 	};
+
 
 	typedef std::array<BoardData, 8*8> BoardState;
 
@@ -32,6 +39,14 @@ class IBoard {
 
 	//! Move a piece and return true if successful false otherwise
 	virtual bool move(int fromX, int fromY, int toX, int toY) = 0;
+
+	//! Wait for my turn
+	//! @playerNum: The player to wait for: 0 to wait for any player
+	virtual void wait(PlayerNum playerNum) = 0;
+
+	virtual PlayerNum player() = 0;
+
+	virtual PlayerNum connect(std::string name, std::string password) = 0;
 
 	// Get the whole board status
 	virtual BoardState state() const = 0;
