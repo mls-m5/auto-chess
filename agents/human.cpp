@@ -19,6 +19,7 @@ void printInvalidInfo() {
 int main(int argc, char ** argv) {
 	cout << "Welcome human!" << endl;
 
+
 //	unique_ptr<IConnection> connection(createConnection(argc, argv));
 
 	string sendFile = "agent1s";
@@ -31,9 +32,8 @@ int main(int argc, char ** argv) {
 	}
 	unique_ptr<IConnection> connection(createFIFOConnection(sendFile, receiveFile)); // Replace with more generic function
 	unique_ptr<IBoard> board(connectToBoard(*connection));
-	cout << "auto-chess human agent" << endl;
 
-	board->disableColors();
+//	board->disableColors();
 
 	bool running = true;
 
@@ -46,6 +46,8 @@ int main(int argc, char ** argv) {
 	if (player == 2) {
 		cout << "waiting for other player..." << endl;
 		board->wait(player);
+		cout << "your turn" << endl;
+		board->print();
 	}
 
 	string line;
@@ -73,16 +75,15 @@ int main(int argc, char ** argv) {
 			int toX = to[0] - 'a';
 			int toY = to[1] - '1';
 
-			while (!board->move(fromX, fromY, toX, toY)) {
+			if (!board->move(fromX, fromY, toX, toY)) {
 				board->print();
 
 				cout << "illegal move, try again" << endl;
 			}
-
-			cout << "ok" << endl;
-			board->print();
-			cout << "waiting for other player..." << endl;
-			board->wait(player);
+			else {
+				cout << "waiting for other player..." << endl;
+				board->wait(player);
+			}
 		}
 
 		board->print();

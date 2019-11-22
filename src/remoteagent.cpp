@@ -52,6 +52,12 @@ void RemoteAgent::startThread() {
 			_connection.sendLine(ss.str());
 		}
 		if (isCommand(line, "move")) {
+			if (!_playerNumber) {
+				_connection.sendLine("denied");
+			}
+			if (_playerNumber != _board.player()) {
+				_board.wait(_playerNumber);
+			}
 			string command;
 			int fromX, fromY, toX, toY;
 			{
@@ -63,7 +69,7 @@ void RemoteAgent::startThread() {
 				_board.print();
 			}
 			else {
-				_connection.sendLine("invalid\n");
+				_connection.sendLine("invalid");
 			}
 		}
 		if (isCommand(line, "state")) {
@@ -80,7 +86,8 @@ void RemoteAgent::startThread() {
 			istringstream ss(line);
 			string command, name, password;
 			ss >> command >> name >> password;
-			_connection.sendLine(to_string(_board.connect(name, password)) + "\n");
+			_playerNumber = _board.connect(name, password);
+			_connection.sendLine(to_string(_playerNumber));
 		}
 		if (isCommand(line, "disconnect")) {
 			throw runtime_error("player disconnected");

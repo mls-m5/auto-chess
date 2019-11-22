@@ -174,7 +174,7 @@ public:
 			}
 		}
 		else if (fromCell.type == 'k') {
-			if (abs(toX - fromX) <= 1 && abs(toY - toY) <= 1) {
+			if (abs(toX - fromX) <= 1 && abs(toY - fromY) <= 1) {
 				return true;
 			}
 		}
@@ -216,6 +216,11 @@ public:
 			light = "";
 			dark = "";
 		}
+
+		if (!_agent1.name.empty() && !_agent2.name.empty()) {
+			stream << _agent1.name << " vs " << _agent2.name << endl;
+		}
+
 		stream << " ";
 		for (int x = 0; x < _width; ++x) {
 			stream << " " << (char)('a' + x) << " ";
@@ -263,7 +268,7 @@ public:
 			auto lock = lock_guard(_agents[player - 1].agentMutex);
 		}
 		else {
-			auto lock = lock_guard(_agents[otherPlayer()].agentMutex);
+			auto lock = lock_guard(_agents[otherPlayer() - 1].agentMutex);
 		}
 	}
 

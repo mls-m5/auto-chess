@@ -25,7 +25,16 @@ make -j
 
 # Run main application
 ``` bash
-./chess
+./chess # start the server
+```
+
+## Run agents
+``` bash
+./agents/monkey agent2s agent2r # start a monkey AI as agent 2
+```
+
+``` bash
+./agents/human      #start a human interface as agent 1
 ```
 
 

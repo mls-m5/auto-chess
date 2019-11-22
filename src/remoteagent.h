@@ -10,8 +10,8 @@
 #include <thread>
 #include <string>
 #include <array>
+#include "iboard.h"
 
-class IBoard;
 class IConnection;
 
 class RemoteAgent {
@@ -25,8 +25,8 @@ private:
 	IConnection &_connection;
 	std::thread _thread;
 
-	std::string name;
-	char playerNumber;
+	std::string _name;
+	PlayerNum _playerNumber;
 };
 
 

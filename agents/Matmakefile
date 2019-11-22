@@ -2,9 +2,10 @@
 config = c++17
 flags += -lstdc++fs
 includes = ../include ../src
+src += remoteboard.cpp ../src/fifoconnection.cpp
 
 flags += -g
 
-human.src = %.cpp
-human.src += remoteboard.cpp ../src/fifoconnection.cpp
+human.src += %.cpp
 
+monkey.src += %.cpp

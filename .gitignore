@@ -9,4 +9,4 @@ chess
 tests/*_test
 
 agents/human
-
+agents/monkey
