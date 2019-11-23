@@ -221,7 +221,7 @@ public:
 
 		if (fromCell.type == 'p') { // Pawn
 			if (toCell.player == otherPlayer(player)) {
-				if (abs(fromX - toX) == 1 && toX - fromX == forwardDirection(player)) {
+				if (abs(fromX - toX) == 1 && (toY - fromY) == forwardDirection(player)) {
 					return true;
 				}
 			}

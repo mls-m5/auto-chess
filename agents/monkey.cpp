@@ -61,7 +61,7 @@ int main(int argc, char ** argv) {
 
 			cout << "move successful after only " << tries << " tries" << endl;
 			tries = 0;
-			this_thread::sleep_for(1s); // Lets not owerwork it
+			this_thread::sleep_for(5s); // Lets not owerwork it
 		}
 	}
 

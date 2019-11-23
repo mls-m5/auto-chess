@@ -42,7 +42,7 @@ TEST_CASE("Move pawn, black attack") {
 TEST_CASE("stop invalid moves") {
 	unique_ptr<IBoard> board(createBoard());
 
-	ASSERT_EQ(false, board->move(4, 6, 4, 1)) // Crazy jump
+	ASSERT_EQ(false, board->move(4, 1, 5, 6)) // Crazy pawn jump
 	ASSERT_EQ(false, board->move(4, 6, 4, 5)) // Wrong player
 }
 
