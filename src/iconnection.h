@@ -10,14 +10,14 @@ public:
 	virtual ~IConnection() {}
 
 	//! guaranteed to send a '\n' at end of transmission
-	virtual void sendLine(const std::string &line) = 0;
+	virtual IConnection &sendLine(const std::string &line) = 0;
 
 	//! read a single line, and wait if there is no line to read
-	virtual std::string readLine() = 0;
+	virtual std::string read() = 0;
 
 	//! the same as readLine() but returns a reference to the connection
 	//! to be used in for example if or while-statement
-	virtual IConnection &readLine(std::string &line) = 0;
+	virtual IConnection &read(std::string &line) = 0;
 
 	//! Returns the state of the connection
 	//! returns true if the connection is still active and

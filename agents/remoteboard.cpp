@@ -22,9 +22,11 @@ public:
 	BoardCellData operator()(int x, int y) const override {
 		ostringstream ss;
 		ss << "get " << x << y << endl;
-		_connection.sendLine(ss.str());
+		if (!_connection.sendLine(ss.str())) {
+			throw runtime_error("connection closed");
+		}
 
-		auto line = _connection.readLine();
+		auto line = _connection.read();
 
 		if (line.empty()) {
 			throw runtime_error("connection lost to board");
@@ -50,9 +52,11 @@ public:
 		ostringstream ss;
 		ss << "move " << fromX << " " << fromY << " " << toX << " " << toY << endl;
 
-		_connection.sendLine(ss.str());
+		if (!_connection.sendLine(ss.str())) {
+			throw runtime_error("connection closed");
+		}
 
-		auto line = _connection.readLine();
+		auto line = _connection.read();
 		if (line.find("ok") == 0) {
 			return true;
 		}
@@ -63,25 +67,33 @@ public:
 
 	// Get the whole board status
 	BoardState state() const override {
-		_connection.sendLine("state");
-		return BoardState(_connection.readLine());
+		if (!_connection.sendLine("state")) {
+			throw runtime_error("connection closed");
+		}
+		return BoardState(_connection.read());
 	}
 
 	void wait(PlayerNum player) override {
 		ostringstream ss;
 		ss << "wait " << player << endl;
-		_connection.sendLine(ss.str());
-		_connection.readLine();
+		if (!_connection.sendLine(ss.str())) {
+			throw runtime_error("connection closed");
+		}
+		_connection.read();
 	}
 
 	PlayerNum player() override {
-		_connection.sendLine("player");
-		return static_cast<PlayerNum>(stoi(_connection.readLine()));
+		if (!_connection.sendLine("player")) {
+			throw runtime_error("connection closed");
+		}
+		return static_cast<PlayerNum>(stoi(_connection.read()));
 	}
 
 	virtual PlayerNum connect(std::string name, std::string password) override {
-		_connection.sendLine("connect " + name + " " + password);
-		return static_cast<PlayerNum>(stoi(_connection.readLine()));
+		if (!_connection.sendLine("connect " + name + " " + password)) {
+			throw runtime_error("connection closed");
+		}
+		return static_cast<PlayerNum>(stoi(_connection.read()));
 	}
 
 private:

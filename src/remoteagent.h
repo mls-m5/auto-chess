@@ -18,18 +18,22 @@ class IConnection;
 //! This is supposed to be used by the server when connecting to agents
 class RemoteAgent {
 public:
-	RemoteAgent(IBoard &board, IConnection &connection);
+	RemoteAgent(IBoard &board, std::unique_ptr<IConnection> &&connection);
+	~RemoteAgent();
 
 	void wait();
+
+	bool isRunning() {
+		return _isRunning;
+	}
 private:
 	void startThread();
 	IBoard &_board;
-	IConnection &_connection;
+	std::unique_ptr<IConnection> _connection;
 	std::thread _thread;
 
 	std::string _name;
 	PlayerNum _playerNumber;
+
+	bool _isRunning = true;
 };
-
-
-

@@ -13,21 +13,30 @@
 using namespace std;
 
 bool isCommand(const std::string &line, const std::string &command) {
-	return line.find(command + " ") == 0 || line == command;
+	return line.find(command + " ") == 0 || line == command || line == (command + "\n");
 }
 
-RemoteAgent::RemoteAgent(IBoard &board, IConnection &connection):
+RemoteAgent::RemoteAgent(IBoard &board, unique_ptr<IConnection> &&connection):
 _board(board),
-_connection(connection){
+_connection(move(connection)){
 
 	_thread = std::thread([this]() {
-		startThread();
+		try {
+			startThread();
+		}
+		catch (runtime_error &e) {
+			cout << "Agent quit " << e.what() << endl;
+		}
+		catch (...) {
+			cout << "Agent crashed " << endl;
+		}
+		_isRunning = false;
 	});
 }
 
 void RemoteAgent::startThread() {
 	string line;
-	while (_connection.readLine(line)) {
+	while (_connection->read(line)) {
 		if (isCommand(line, "get")) {
 			string command;
 			int x, y;
@@ -42,18 +51,18 @@ void RemoteAgent::startThread() {
 				ostringstream ss("cell ");
 				ss << static_cast<int>(data.type) << " ";
 				ss << static_cast<int>(data.player) << endl;
-				_connection.sendLine(ss.str());
+				_connection->sendLine(ss.str());
 			}
 		}
 		if (isCommand(line, "print")) {
 			ostringstream ss;
 			_board.state().print(ss);
 			ss << endl << "end" << endl;
-			_connection.sendLine(ss.str());
+			_connection->sendLine(ss.str());
 		}
 		if (isCommand(line, "move")) {
 			if (!_playerNumber) {
-				_connection.sendLine("denied");
+				_connection->sendLine("denied");
 			}
 			if (_playerNumber != _board.player()) {
 				_board.wait(_playerNumber);
@@ -65,22 +74,22 @@ void RemoteAgent::startThread() {
 				ss >> command >> fromX >> fromY >> toX >> toY;
 			}
 			if (_board.move(fromX, fromY, toX, toY)) {
-				_connection.sendLine("ok\n");
+				_connection->sendLine("ok\n");
 				_board.state().print();
 			}
 			else {
-				_connection.sendLine("invalid");
+				_connection->sendLine("invalid");
 			}
 		}
 		if (isCommand(line, "state")) {
-			_connection.sendLine(_board.state().serialize());
+			_connection->sendLine(_board.state().serialize());
 		}
 		if (isCommand(line, "connect")) {
 			istringstream ss(line);
 			string command, name, password;
 			ss >> command >> name >> password;
 			_playerNumber = _board.connect(name, password);
-			_connection.sendLine(to_string(_playerNumber));
+			_connection->sendLine(to_string(_playerNumber));
 		}
 		if (isCommand(line, "disconnect")) {
 			throw runtime_error("player disconnected");
@@ -88,7 +97,7 @@ void RemoteAgent::startThread() {
 		if (isCommand(line, "wait")) {
 			if (line == "wait") {
 				_board.wait(PlayerNum::None);
-				_connection.sendLine("ok\n");
+				_connection->sendLine("ok\n");
 			}
 			else {
 				istringstream ss(line);
@@ -96,13 +105,18 @@ void RemoteAgent::startThread() {
 				int player;
 				ss >> command >> player;
 				_board.wait(static_cast<PlayerNum>(player));
-				_connection.sendLine("ok\n");
+				_connection->sendLine("ok\n");
 			}
 		}
 		if (isCommand(line, "player")) {
-			_connection.sendLine(to_string(_board.player()) + "\n");
+			_connection->sendLine(to_string(_board.player()) + "\n");
 		}
 	}
+}
+
+RemoteAgent::~RemoteAgent() {
+	_connection.reset();
+	wait();
 }
 
 void RemoteAgent::wait() {
