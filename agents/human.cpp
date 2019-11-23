@@ -41,13 +41,13 @@ int main(int argc, char ** argv) {
 
 	cout << "You are " << ((player == PlayerNum::Player1)? "white" : "black") << endl;
 
-	board->print();
+	board->state().print();
 
 	if (player == 2) {
 		cout << "waiting for other player..." << endl;
 		board->wait(player);
 		cout << "your turn" << endl;
-		board->print();
+		board->state().print();
 	}
 
 	string line;
@@ -76,7 +76,7 @@ int main(int argc, char ** argv) {
 			int toY = to[1] - '1';
 
 			if (!board->move(fromX, fromY, toX, toY)) {
-				board->print();
+				board->state().print();
 
 				cout << "illegal move, try again" << endl;
 			}
@@ -86,7 +86,7 @@ int main(int argc, char ** argv) {
 			}
 		}
 
-		board->print();
+		board->state().print();
 	}
 }
 

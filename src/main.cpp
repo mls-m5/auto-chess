@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
 	auto remoteAgent1 = make_unique<RemoteAgent>(*board, *connection1);
 	auto remoteAgent2 = make_unique<RemoteAgent>(*board, *connection2);
 
-	board->print();
+	board->state().print();
 
 	remoteAgent1->wait();
 	remoteAgent2->wait();

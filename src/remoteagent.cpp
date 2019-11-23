@@ -47,7 +47,7 @@ void RemoteAgent::startThread() {
 		}
 		if (isCommand(line, "print")) {
 			ostringstream ss;
-			_board.print(ss);
+			_board.state().print(ss);
 			ss << endl << "end" << endl;
 			_connection.sendLine(ss.str());
 		}
@@ -66,21 +66,14 @@ void RemoteAgent::startThread() {
 			}
 			if (_board.move(fromX, fromY, toX, toY)) {
 				_connection.sendLine("ok\n");
-				_board.print();
+				_board.state().print();
 			}
 			else {
 				_connection.sendLine("invalid");
 			}
 		}
 		if (isCommand(line, "state")) {
-			auto state = _board.state();
-			string stringState;
-			stringState.reserve(state.size() * 2);
-			for (auto cell: state) {
-				stringState.push_back((cell.type == 0)? ' ': cell.type);
-				stringState.push_back(cell.player + '0');
-			}
-			_connection.sendLine(stringState);
+			_connection.sendLine(_board.state().serialize());
 		}
 		if (isCommand(line, "connect")) {
 			istringstream ss(line);
@@ -108,9 +101,6 @@ void RemoteAgent::startThread() {
 		}
 		if (isCommand(line, "player")) {
 			_connection.sendLine(to_string(_board.player()) + "\n");
-		}
-		if (isCommand(line, "colors")) {
-			_board.disableColors();
 		}
 	}
 }

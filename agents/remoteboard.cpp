@@ -6,6 +6,8 @@
 
 using namespace std;
 
+//! Handles the connection to a board an another process/computer
+//! This is the interface that is supposed to be used by agents
 class RemoteBoard: public IBoard {
 public:
 	RemoteBoard(IConnection &connection):
@@ -16,13 +18,8 @@ public:
 		_connection.sendLine("disconnect\n");
 	}
 
-	//! Reduce graphics awesomeness for terminals with less colors
-	void disableColors() override {
-		_connection.sendLine("colors disable");
-	}
-
 	//! Get a cell on a specific coordinate
-	BoardData operator()(int x, int y) const override {
+	BoardCellData operator()(int x, int y) const override {
 		ostringstream ss;
 		ss << "get " << x << y << endl;
 		_connection.sendLine(ss.str());
@@ -42,25 +39,10 @@ public:
 			char piece;
 			char player;
 			received >> piece >> player;
-			return {piece, player};
+			return {piece, static_cast<PlayerNum>(player)};
 		}
 
-		// Todo: Handle this better
-		throw runtime_error("unexpected command from board");
-	}
-
-	//! Prints the board to a given stream
-	void print(std::ostream &stream = std::cout) const override {
-		_connection.sendLine("print\n");
-
-		string line;
-
-		while (_connection.readLine(line)) {
-			if (line.find("end") == 0) {
-				break;
-			}
-			stream << line << endl;
-		}
+		throw runtime_error("unexpected response from board");
 	}
 
 	//! Move a piece and return true if successful false otherwise
@@ -82,18 +64,7 @@ public:
 	// Get the whole board status
 	BoardState state() const override {
 		_connection.sendLine("state");
-
-		auto response = _connection.readLine();
-		BoardState state;
-		for (size_t i = 0;
-				i < state.size() * 2 && i < response.size();
-				i += 2) {
-			auto piece = response[i];
-			char player = response[i + 1] - '0';
-			piece = (piece == ' ')? 0: piece;
-			state[i] = BoardData {piece, player};
-		}
-		return state;
+		return BoardState(_connection.readLine());
 	}
 
 	void wait(PlayerNum player) override {

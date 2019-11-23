@@ -7,5 +7,6 @@ config += c++17
 move_test.src += %.cpp
 move_test.src += ../src/board.cpp
 
+boardstate_test.src += %.cpp
 
 

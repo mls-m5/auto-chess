@@ -35,7 +35,7 @@ int main(int argc, char ** argv) {
 
 	cout << "You are " << ((player == PlayerNum::Player1)? "white" : "black") << endl;
 
-	board->print();
+	board->state().print();
 
 	if (player == 2) {
 		cout << "waiting for other player..." << endl;
@@ -55,7 +55,7 @@ int main(int argc, char ** argv) {
 		auto toY = distribution(generator);
 		++ tries;
 		if (board->move(fromX, fromY, toX, toY)) {
-			board->print();
+			board->state().print();
 
 			cout << "move successful after only " << tries << " tries" << endl;
 			tries = 0;

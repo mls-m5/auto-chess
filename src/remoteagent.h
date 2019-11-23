@@ -14,6 +14,8 @@
 
 class IConnection;
 
+//! Handles the connection to a agent in another process/on another computer
+//! This is supposed to be used by the server when connecting to agents
 class RemoteAgent {
 public:
 	RemoteAgent(IBoard &board, IConnection &connection);
