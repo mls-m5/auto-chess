@@ -136,20 +136,24 @@ public:
 	void print(std::ostream &stream = std::cout, bool enableColors = true) const {
 		std::string light = "\e[48;2;50;50;50m";
 		std::string dark = "\e[48;2;0;0;0m";
+		std::string resetColors = "\e[0m";
+		std::string borderText = "\e[90m";
 		if (!enableColors) {
 			light = "";
 			dark = "";
+			resetColors = "";
+			borderText = "";
 		}
 
-		stream << " ";
+		stream << " " << borderText;
 		for (int x = 0; x < width(); ++x) {
-			stream << " " << (char)('a' + x) << " ";
+			stream << " " << borderText << (char)('a' + x) << " ";
 		}
-		stream << std::endl;
+		stream << resetColors <<  std::endl;
 		for (int y = height() - 1; y >= 0; --y) {
-			stream << y + 1;
+			stream << borderText << y + 1 << resetColors;
 			for (int x = 0; x < width(); ++x) {
-				if ((y % 2) != (x % 2)) {
+				if ((y % 2) == (x % 2)) {
 					stream << dark;
 				}
 				else {
@@ -171,13 +175,17 @@ public:
 					}
 				}
 			}
-			if (!enableColors) {
-				stream << std::endl;
-			}
-			else {
-				stream << "\e[0m" << std::endl; // Reset colors and newline
-			}
+
+			stream << resetColors;
+			stream << borderText << y + 1 << resetColors << std::endl;
 		}
+
+		stream << " " << borderText;
+		for (int x = 0; x < width(); ++x) {
+			stream << " " << borderText << (char)('a' + x) << " ";
+		}
+		stream << resetColors <<  std::endl;
+
 		stream << std::endl;
 	}
 
