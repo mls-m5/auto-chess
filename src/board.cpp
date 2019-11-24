@@ -43,8 +43,12 @@ public:
 	}
 
 	bool move(int fromX, int fromY, int toX, int toY) override {
+		if (_matchStatus >= MatchStatus::WhiteWon) {
+			return false;
+		}
 		if (_state.move(fromX, fromY, toX, toY, player())) {
 			switchPlayer();
+			_matchStatus = _state.matchStatus(_currentPlayer);
 			return true;
 		}
 		return false;
@@ -91,16 +95,11 @@ public:
 		return PlayerNum::None;
 	}
 
-	static constexpr size_t width() {
-		return BoardState::width();
-	}
-
-	static constexpr size_t height() {
-		return BoardState::height();
+	MatchStatus matchStatus() const override {
+		return _matchStatus;
 	}
 
 private:
-
 
 	PlayerNum otherPlayer() {
 		return _state.otherPlayer(_currentPlayer);
@@ -118,6 +117,7 @@ private:
 
 
 	BoardState _state;
+	MatchStatus _matchStatus = MatchStatus::Normal;
 	PlayerNum _currentPlayer = PlayerNum::Player1;
 
 	array <Agent, 2> _agents;

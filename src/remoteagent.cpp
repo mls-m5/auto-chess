@@ -25,7 +25,7 @@ _connection(move(connection)){
 			startThread();
 		}
 		catch (runtime_error &e) {
-			cout << "Agent quit " << e.what() << endl;
+			cout << "Agent stopped because \'" << e.what() << "\'" << endl;
 		}
 		catch (...) {
 			cout << "Agent crashed " << endl;
@@ -75,7 +75,25 @@ void RemoteAgent::startThread() {
 			}
 			if (_board.move(fromX, fromY, toX, toY)) {
 				_connection->sendLine("ok\n");
-				_board.state().print();
+				ostringstream ss; // Buffer to avoid corrupted boards
+				_board.state().print(ss);
+				switch (_board.matchStatus()) {
+				case MatchStatus::Chess:
+					ss << "Chess" << endl;
+					break;
+				case MatchStatus::WhiteWon:
+					ss << "White won" << endl;
+					break;
+				case MatchStatus::BlackWon:
+					ss << "Black won" << endl;
+					break;
+				case MatchStatus::Draw:
+					ss << "Draw" << endl;
+					break;
+				default:
+					break;
+				}
+				cout << ss.str() << flush;
 			}
 			else {
 				_connection->sendLine("invalid");
@@ -109,7 +127,11 @@ void RemoteAgent::startThread() {
 			}
 		}
 		if (isCommand(line, "player")) {
-			_connection->sendLine(to_string(_board.player()) + "\n");
+			_connection->sendLine(to_string(_board.player()));
+		}
+		if (isCommand(line, "status")) {
+			_connection->sendLine(
+					to_string(static_cast<int>(_board.matchStatus())));
 		}
 	}
 }

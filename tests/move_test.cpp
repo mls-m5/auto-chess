@@ -98,11 +98,11 @@ TEST_CASE("is mate?") {
 	unique_ptr<IBoard> board(createBoard());
 	// Fools mate
 	board->move(5, 1, 5, 2);
-	ASSERT_EQ(false, board->state().isMate());
+	ASSERT_EQ(false, board->state().isMatchFinished(board->player()));
 	board->move(4, 6, 4, 4);
-	ASSERT_EQ(false, board->state().isMate());
+	ASSERT_EQ(false, board->state().isMatchFinished(board->player()));
 	board->move(6, 1, 6, 3);
-	ASSERT_EQ(false, board->state().isMate());
+	ASSERT_EQ(false, board->state().isMatchFinished(board->player()));
 	board->move(3, 7, 7, 3);
 
 	auto state = board->state();
@@ -122,7 +122,8 @@ TEST_CASE("is mate?") {
 		possibleState.printBW();
 	}
 
-	ASSERT(board->state().isMate(), "could not recognize mate");
+	ASSERT(board->matchStatus() == MatchStatus::BlackWon,
+			"could not recognize mate");
 }
 
 TEST_CASE("get all valid moves") {

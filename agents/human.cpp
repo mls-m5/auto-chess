@@ -47,6 +47,7 @@ int main(int argc, char ** argv) {
 	}
 
 	string line;
+	MatchStatus status = MatchStatus::Normal;
 	while (getline(cin, line)) {
 		if (line[0] >= 'a' && line[0] <= 'h') {
 			istringstream ss(line);
@@ -78,13 +79,39 @@ int main(int argc, char ** argv) {
 			}
 			else {
 				board->state().print();
-				cout << "waiting for other player..." << endl;
-				board->wait(player);
+
+				status = board->matchStatus();
+
+				if (status <= MatchStatus::Chess) {
+					cout << "waiting for other player..." << endl;
+					board->wait(player);
+
+					status = board->matchStatus();
+				}
 			}
 		}
 
 		board->state().print();
-		cout << "make your move" << endl;
+
+		switch (status) {
+		case MatchStatus::Normal:
+			cout << "make your move" << endl;
+			break;
+		case MatchStatus::Chess:
+			cout << "Chess!" << endl;
+			break;
+		case MatchStatus::WhiteWon:
+			board->state().print();
+			cout << "White won!" << endl;
+			return 0;
+		case MatchStatus::BlackWon:
+			board->state().print();
+			cout << "Black won!" << endl;
+			return 0;
+		case MatchStatus::Draw:
+			board->state().print();
+			cout << "It is a draw" << endl;
+		}
 	}
 }
 

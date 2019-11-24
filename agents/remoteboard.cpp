@@ -96,6 +96,13 @@ public:
 		return static_cast<PlayerNum>(stoi(_connection.read()));
 	}
 
+	MatchStatus matchStatus() const override {
+		if (!_connection.sendLine("status")) {
+			throw runtime_error("connection closed");
+		}
+		return static_cast<MatchStatus>(stoi(_connection.read()));
+	}
+
 private:
 	IConnection &_connection;
 };

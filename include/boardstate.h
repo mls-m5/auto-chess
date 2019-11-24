@@ -29,6 +29,14 @@ enum PlayerNum: char {
 };
 
 
+enum class MatchStatus {
+	Normal,
+	Chess,
+	WhiteWon,
+	BlackWon,
+	Draw,
+};
+
 
 struct BoardCellData {
 	char type = 0;
@@ -180,7 +188,7 @@ public:
 	}
 
 	bool isInside(int x, int y) const {
-		return x >= 0 && x < width() && y >= 0 && y <= height();
+		return x >= 0 && x < width() && y >= 0 && y < height();
 	}
 
 	BoardCellData operator()(int x, int y) const {
@@ -249,18 +257,34 @@ public:
 		return false;
 	}
 
-	PlayerNum isMate() {
-		for (PlayerNum player: {PlayerNum::Player1, PlayerNum::Player2}) {
+	//! Returns the status of the game before a player is going to make a move
+	//! @player the player that is just about to make a move
+	MatchStatus matchStatus(PlayerNum player) {
+		auto moves = getValidMoves(player);
+		if (moves.empty()) {
 			if (isChess(player)) {
-				auto moves = getValidMoves(player);
-				if (moves.empty()) {
-					return player;
+				if (player == PlayerNum::Player1) {
+					return MatchStatus::BlackWon;
+				}
+				else {
+					return MatchStatus::WhiteWon;
 				}
 			}
+			else {
+				return MatchStatus::Draw;
+			}
 		}
-		return PlayerNum::None;
+		return MatchStatus::Normal;
 	}
 
+
+	bool isMatchFinished(PlayerNum player) {
+		return matchStatus(player) >= MatchStatus::WhiteWon;
+	}
+
+
+	//! Determine if making a move will put the player in chess
+	//! and will therefore be illegal
 	bool willMoveThreatOwnKing(
 			BoardTransition transition, PlayerNum player) const {
 		BoardState newState = *this;

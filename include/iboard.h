@@ -8,6 +8,7 @@
 #include "boardstate.h"
 
 
+
 class IBoard {
 	public:
 
@@ -36,8 +37,11 @@ class IBoard {
 	//! Returns the assigned number for the player
 	virtual PlayerNum connect(std::string name, std::string password) = 0;
 
-	// Get the whole board status
+	//! Get the whole board status
 	virtual BoardState state() const = 0;
+
+	//! If chess or mate
+	virtual MatchStatus matchStatus() const = 0;
 };
 
 

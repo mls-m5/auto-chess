@@ -18,14 +18,12 @@ int main(int argc, char ** argv) {
 	unique_ptr<IConnection> connection(createConnection(argc, argv));
 	unique_ptr<IBoard> board(connectToBoard(*connection));
 
-	bool running = true;
 
 	random_device device;
 	mt19937 generator(device());
 
 	uniform_int_distribution<std::mt19937::result_type> nameDistribution(0,9999);
-
-	auto player = board->connect("monkey" + nameDistribution(generator), "");
+	PlayerNum player = board->connect("monkey" + nameDistribution(generator), "");
 
 	if (!player) {
 		cout << "sorry... dit not get a player seat, quit..." << endl;
@@ -43,12 +41,37 @@ int main(int argc, char ** argv) {
 
 
 	size_t tries = 0;
+	bool running = true;
+
+	auto checkStatus = [&]() {
+		auto status = board->matchStatus();
+		if (status >= MatchStatus::WhiteWon) {
+			running = false;
+		}
+		switch (status) {
+		case MatchStatus::Chess:
+			cout << "Chess" << endl;
+			break;
+		case MatchStatus::WhiteWon:
+			cout << "White won" << endl;
+			break;
+		case MatchStatus::BlackWon:
+			cout << "Black won" << endl;
+			break;
+		case MatchStatus::Draw:
+			cout << "Draw" << endl;
+			break;
+		default:
+			break;
+		}
+	};
+
 	// Super advanced AI stuff:
 
 	// By trying on a local copy we can save network traffic
 	auto localState = board->state();
 	uniform_int_distribution<std::mt19937::result_type> distribution(0,7);
-	while (true) {
+	while (running) {
 		auto fromX = distribution(generator);
 		auto fromY = distribution(generator);
 		auto toX = distribution(generator);
@@ -61,7 +84,8 @@ int main(int argc, char ** argv) {
 
 			cout << "move successful after only " << tries << " tries" << endl;
 			tries = 0;
-			this_thread::sleep_for(5s); // Lets not owerwork it
+			checkStatus();
+			this_thread::sleep_for(.5s); // Lets not owerwork it
 		}
 	}
 
