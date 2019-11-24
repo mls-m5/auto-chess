@@ -21,11 +21,49 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-
+//#include <arpa/inet.h>
+#include <netdb.h>
 
 using namespace std;
 
 namespace {
+
+//! Converts a host name to a ip string
+string getHostAddress(const string &name, short port) {
+	addrinfo hints = {};
+
+	hints.ai_family = AF_UNSPEC;//AF_INET; // only ip4
+	hints.ai_socktype = SOCK_STREAM;
+
+	addrinfo *result;
+	if (getaddrinfo(name.c_str(), to_string(port).c_str(), &hints, &result)) {
+		throw runtime_error("could not find address " + name);
+	}
+
+	shared_ptr<addrinfo> pResult(result, [](addrinfo *ptr) {
+		freeaddrinfo(ptr);
+	});
+
+	for (auto p = result; p; p = p->ai_next) {
+		void *address;
+		string ipVersion;
+		if (p->ai_family == AF_INET) {
+			auto *ip4 = (sockaddr_in*)p->ai_addr;
+			address = &(ip4->sin_addr);
+			ipVersion = "ip4";
+		}
+		else {
+			auto *ip6 = (sockaddr_in6 *)p->ai_addr;
+			address = &(ip6->sin6_addr);
+			ipVersion = "ip6";
+		}
+
+		std::array<char, INET6_ADDRSTRLEN> ipstr;
+		inet_ntop(p->ai_family, address, ipstr.data(), ipstr.size());
+		return ipstr.data(); // Return the first match
+	}
+	return "";
+}
 
 // Connect to a remote connection
 class TCPConnection: public IConnection {
@@ -42,8 +80,10 @@ public:
 		address.sin_family = AF_INET;
 		address.sin_port = htons(remotePort);
 
+		auto ipString = getHostAddress(hostname, remotePort);
+
 		// Resolve hostname
-		if (inet_pton(AF_INET, hostname.c_str(), &address.sin_addr) < 0) {
+		if (inet_pton(AF_INET, ipString.c_str(), &address.sin_addr) < 0) {
 			throw std::runtime_error("could not resolve host");
 		}
 

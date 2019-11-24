@@ -1,14 +1,22 @@
 
+# Matmake file
+# https://github.com/mls-m5/matmake
+
+# ====== common settings =============
+
 config = c++17
-flags += -lstdc++fs
-includes = ../include ../src
+flags +=
+	-lstdc++fs
+	-g
+includes +=
+	../include
+	../src
 src +=
 	remoteboard.cpp
-	../src/fifoconnection.cpp
-	../src/tcpconnection.cpp
-	../src/genericconnection.cpp
+	../src/*connection.cpp
 
-flags += -g
+
+# ======= Define the targets ==========
 
 human.src += %.cpp
 

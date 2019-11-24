@@ -6,7 +6,6 @@
 
 #include <iostream>
 #include <memory>
-#include <sstream>
 #include <random>
 #include <thread>
 
@@ -15,13 +14,17 @@ using namespace std;
 int main(int argc, char ** argv) {
 	cout << "🐵🐵🐵 This is the monkey 1000 advanced chess AI! 🐵🐵🐵" << endl;
 
+	// Setup a connection defined by program arguments
 	unique_ptr<IConnection> connection(createConnection(argc, argv));
 	unique_ptr<IBoard> board(connectToBoard(*connection));
 
 
+	// Device and generator for random numbers
 	random_device device;
 	mt19937 generator(device());
 
+
+	// Generate a random name
 	uniform_int_distribution<std::mt19937::result_type> nameDistribution(0,9999);
 	PlayerNum player = board->connect("monkey" + nameDistribution(generator), "");
 
@@ -31,7 +34,6 @@ int main(int argc, char ** argv) {
 	}
 
 	cout << "You are " << ((player == PlayerNum::Player1)? "white" : "black") << endl;
-
 	board->state().print();
 
 	if (player == 2) {
@@ -43,7 +45,8 @@ int main(int argc, char ** argv) {
 	size_t tries = 0;
 	bool running = true;
 
-	auto checkStatus = [&]() {
+	// Handle if the match is finished
+	auto checkStatus = [&running, &board]() {
 		auto status = board->matchStatus();
 		if (status >= MatchStatus::WhiteWon) {
 			running = false;
@@ -77,6 +80,7 @@ int main(int argc, char ** argv) {
 		auto toX = distribution(generator);
 		auto toY = distribution(generator);
 		++ tries;
+
 		if (localState.isMoveValid(fromX, fromY, toX, toY, player) &&
 				board->move(fromX, fromY, toX, toY)) {
 			localState = board->state();
@@ -85,7 +89,7 @@ int main(int argc, char ** argv) {
 			cout << "move successful after only " << tries << " tries" << endl;
 			tries = 0;
 			checkStatus();
-			this_thread::sleep_for(.5s); // Lets not owerwork it
+			this_thread::sleep_for(.5s); // Let's not overwork it
 		}
 	}
 
