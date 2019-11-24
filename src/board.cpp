@@ -42,15 +42,6 @@ public:
 		return _state(x, y);
 	}
 
-	//! Checks lines and diagonals if it is okay to move
-	bool isPathClear(int fromX, int fromY, int toX, int toY) const {
-		return _state.isPathClear(fromX, fromY, toX, toY, _currentPlayer);
-	}
-
-	bool isMoveValid(int fromX, int fromY, int toX, int toY) {
-		return _state.isMoveValid(fromX, fromY, toX, toY, player());
-	}
-
 	bool move(int fromX, int fromY, int toX, int toY) override {
 		if (_state.move(fromX, fromY, toX, toY, player())) {
 			switchPlayer();

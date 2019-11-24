@@ -13,7 +13,7 @@
 using namespace std;
 
 int main(int argc, char ** argv) {
-	cout << "This is the monkey 1000 advanced chess AI!" << endl;
+	cout << "🐵🐵🐵 This is the monkey 1000 advanced chess AI! 🐵🐵🐵" << endl;
 
 	unique_ptr<IConnection> connection(createConnection(argc, argv));
 	unique_ptr<IBoard> board(connectToBoard(*connection));

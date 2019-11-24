@@ -9,6 +9,8 @@
 
 #include <iostream>
 #include <map>
+#include <vector>
+#include <algorithm>
 
 
 const std::map<char, std::pair<std::string, std::string> > graphics = {
@@ -26,17 +28,30 @@ enum PlayerNum: char {
 	Player2 = 2
 };
 
+
+
 struct BoardCellData {
 	char type = 0;
 	PlayerNum player = PlayerNum::None;
 
-	bool operator ==(const BoardCellData &other) {
+	bool operator ==(const BoardCellData &other) const {
 		return type == other.type && player == other.player;
 	}
 
-	bool operator !=(const BoardCellData &other) {
+	bool operator !=(const BoardCellData &other) const {
 		return type != other.type || player != other.player;
 	}
+};
+
+
+
+struct BoardTransition {
+	BoardTransition() {* this = {};};
+	BoardTransition(int fromX, int fromY, int toX, int toY):
+		fromX(fromX), fromY(fromY), toX(toX), toY(toY) {}
+
+	char fromX, fromY;
+	char toX, toY;
 };
 
 
@@ -45,7 +60,15 @@ struct BoardCellData {
 //! BoardState does only contain information about the pieces and their position
 //! but no information about the players
 //! The storage size is the same size as corresponding array of BoardCellData
+//! plus keeping track of king and rook movement to verify if castling is allowed
 class BoardState: public std::array<BoardCellData, 8*8> {
+private:
+	std::array<unsigned char, 2> _castlingStatus = {};
+
+	static constexpr unsigned KingMoved =       0b0001;
+	static constexpr unsigned LeftRookMoved =   0b0010;
+	static constexpr unsigned RightRookMoved =  0b0100;
+
 public:
 	BoardState() = default;
 	BoardState(const BoardState&) = default;
@@ -182,7 +205,7 @@ public:
 		return (*this)(x, y);
 	}
 
-	auto at(int x, int y) const {
+	const auto at(int x, int y) const {
 		return (*this)(x, y);
 	}
 
@@ -194,7 +217,76 @@ public:
 		return (player == PlayerNum::Player1)? PlayerNum::Player2: PlayerNum::Player1;
 	}
 
+	//! Check if the king is threatened
+	//! Also known as "chess"
+	bool isChess(PlayerNum player) {
+		// Find the king
+		int kingX, kingY;
+		for (int y = 0; y < height(); ++y) {
+			for (int x = 0; x < width(); ++x) {
+				auto &cell = at(x, y);
+				if (cell.type == 'k' && cell.player == player) {
+					kingX = x;
+					kingY = y;
+					break;
+				}
+			}
+		}
+
+		auto theOtherPlayer = otherPlayer(player);
+
+		// Can any of the other players pieces attack the king
+		for (int y = 0; y < height(); ++y) {
+			for (int x = 0; x < width(); ++x) {
+				auto &cell = at(x, y);
+				if (cell.player == theOtherPlayer) {
+					if (canPieceMoveTo(x, y, kingX, kingY, theOtherPlayer)) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+	PlayerNum isMate() {
+		for (PlayerNum player: {PlayerNum::Player1, PlayerNum::Player2}) {
+			if (isChess(player)) {
+				auto moves = getValidMoves(player);
+				if (moves.empty()) {
+					return player;
+				}
+			}
+		}
+		return PlayerNum::None;
+	}
+
+	bool willMoveThreatOwnKing(
+			BoardTransition transition, PlayerNum player) const {
+		BoardState newState = *this;
+		newState.moveUnchecked(transition);
+		return newState.isChess(player);
+	}
+
+	//! The last check before making a move
+	//! If this returns true it is perfectly okay to move the piece in a game
 	bool isMoveValid(int fromX, int fromY, int toX, int toY, PlayerNum player) const {
+		return isMoveValid({fromX, fromY, toX, toY}, player);
+	}
+
+	bool isMoveValid(BoardTransition t, PlayerNum player) const {
+		if (isCastling(t)) {
+			return isCastlingValid(t);
+		}
+		else {
+			return canPieceMoveTo(t.fromX, t.fromY, t.toX, t.toY, player) &&
+					!willMoveThreatOwnKing(t, player);
+		}
+	}
+
+	//! Check if a piece can move to a position
+	//! Do not check for chess
+	bool canPieceMoveTo(int fromX, int fromY, int toX, int toY, PlayerNum player) const {
 		if (!isInside(fromX, fromY)) {
 			return false;
 		}
@@ -271,13 +363,13 @@ public:
 
 	//! Checks lines and diagonals if it is okay to move
 	bool isPathClear(int fromX, int fromY, int toX, int toY, PlayerNum player) const {
-		auto dx = fromX - toX;
-		auto dy = fromY - toY;
+		auto dx = toX - fromX;
+		auto dy = toY - fromY;
 		if (dx == 0) {
 			// Vertical movement
 			auto length = abs(dy);
 			auto direction = dy / length;
-			for (int i = 0; i < length; ++i) {
+			for (int i = 1; i < length; ++i) {
 				auto ty = fromY + i * direction;
 				if (at(fromX, ty).type != 0) {
 					return false;
@@ -288,7 +380,7 @@ public:
 			// Horizontal movement
 			auto length = abs(dx);
 			auto direction = dx / length;
-			for (int i = 0; i < length; ++i) {
+			for (int i = 1; i < length; ++i) {
 				auto tx = fromX + i * direction;
 				if (at(tx, fromY).type != 0) {
 					return false;
@@ -300,7 +392,7 @@ public:
 			auto dirx = dx / length;
 			auto diry = dy / length;
 
-			for (int i = 0; i < length; ++i) {
+			for (int i = 1; i < length; ++i) {
 				auto tx = fromX + i * dirx;
 				auto ty = fromY + i * diry;
 				if (at(tx, ty).type != 0) {
@@ -319,17 +411,372 @@ public:
 		return true;
 	}
 
+
+	//! Get moves that is allowed without ending up in chess
+	std::vector<BoardTransition> getValidMoves() {
+		return {};
+	}
+
+
+	//! Get all possible movements for a single piece
+	std::vector<BoardTransition> getPossibleMoves(int x, int y) {
+		std::vector<BoardTransition> ret;
+		auto &cell = at(x, y);
+		auto type = cell.type;
+		auto player = cell.player;
+		auto theOtherPlayer = otherPlayer(player);
+
+		auto addMove = [&](int toX, int toY) {
+			ret.insert(ret.end(), {x, y, toX, toY});
+		};
+
+		auto tryMove = [&](int toX, int toY) {
+			if (canPieceMoveTo(x, y, toX, toY, player)) {
+				addMove(toX, toY);
+				return true;
+			}
+			else {
+				return false;
+			}
+		};
+
+		auto tryDirection = [&](int dx, int dy) {
+			for (int i = 1; i < 8; ++i) {
+				auto tx = x + dx * i;
+				auto ty = y + dy * i;
+				if (tx < 0 || tx >= width() || ty < 0 || ty >= height()) {
+					return;
+				}
+				auto &cell = at(tx, ty);
+				auto &cellPlayer = cell.player;
+				if (cellPlayer == theOtherPlayer) {
+					addMove(tx, ty);
+					return;
+				}
+				else if (cell.player == player) {
+					return;
+				}
+				else {
+					addMove(tx, ty);
+				}
+			}
+		};
+
+		auto tryStraights = [&]() {
+			tryDirection(-1, 0);
+			tryDirection(+1, 0);
+			tryDirection(0, +1);
+			tryDirection(0, -1);
+		};
+
+		auto tryDiagonals = [&]() {
+			tryDirection(-1, -1);
+			tryDirection(+1, -1);
+			tryDirection(+1, +1);
+			tryDirection(+1, -1);
+		};
+
+		switch (type) {
+			case 'p':
+			{
+				auto forward = forwardDirection(player);
+				if (tryMove(x, y + forward)) {
+					tryMove(x, y + forward * 2);
+				}
+				tryMove(x + 1, y + forward);
+				tryMove(x - 1, y + forward);
+				break;
+			}
+
+			case 'k':
+				tryMove(x + 1, y);
+				tryMove(x + 1, y + 1);
+				tryMove(x, y + 1);
+				tryMove(x - 1, y + 1);
+				tryMove(x - 1, y);
+				tryMove(x - 1, y - 1);
+				tryMove(x, y - 1);
+				tryMove(x - 1, y - 1);
+				break;
+
+			case 'n':
+				tryMove(x + 2, y + 1);
+				tryMove(x + 1, y + 2);
+				tryMove(x + 2, y - 1);
+				tryMove(x + 1, y - 2);
+				tryMove(x - 2, y + 1);
+				tryMove(x - 1, y + 2);
+				tryMove(x - 2, y - 1);
+				tryMove(x - 1, y - 2);
+				break;
+
+			case 'r':
+				tryStraights();
+				break;
+
+			case 'b':
+				tryDiagonals();
+				break;
+
+			case 'q':
+				tryStraights();
+				tryDiagonals();
+				break;
+
+			default:
+				break;
+		}
+
+		return ret;
+	}
+
+	//! Get moves that is allowed by piece restrictions
+	//! Note that this does not check if the move leads to chess or not
+	//! For that, use getValidMoves
+	std::vector<BoardTransition> getPossibleMoves(PlayerNum player) {
+		std::vector<BoardTransition> ret;
+
+		for (int y = 0; y < height(); ++y) {
+			for (int x = 0; x < width(); ++x) {
+				if (at(x, y).player == player) {
+					auto moves = getPossibleMoves(x, y);
+					ret.insert(ret.end(), moves.begin(), moves.end());
+				}
+			}
+		}
+
+		return ret;
+	}
+
+	//! Get a list of all possible moves for player
+	std::vector<BoardTransition> getValidMoves(PlayerNum player, bool includeCastling = false) {
+		auto ret = getPossibleMoves(player);
+		auto removeFrom = std::remove_if(
+				ret.begin(),
+				ret.end(),
+				[this, player](BoardTransition& transition) {
+			auto newState = *this;
+			newState.moveUnchecked(transition);
+			// Remove all moves that leads to chess
+			return newState.isChess(player);
+		});
+		ret.erase(removeFrom, ret.end());
+
+		if (includeCastling) {
+			auto y = (player == PlayerNum::Player1)? 0: 7;
+			for (BoardTransition transition: {
+				BoardTransition(4, y, 2, y), BoardTransition(4, y, 4, 6)}) {
+				if (isCastlingValid(transition)) {
+					ret.push_back(transition);
+				}
+			}
+		}
+		return ret;
+	}
+
+	//! Recognize if the current movement is a castling move
+	bool isCastling(BoardTransition transition) const {
+		auto &fromCell = at(transition.fromX, transition.fromY);
+		auto player = (transition.fromY == 0)? PlayerNum::Player1: PlayerNum::Player2;
+		if (fromCell.type == 'k') {
+			if (transition.toX > transition.fromX) {
+				if (at(7, transition.toY).type != 'r') {
+					return false;
+				}
+				if (castlingStatus(player) & (KingMoved | RightRookMoved)) {
+					return false;
+				}
+			}
+			else {
+				if (at(0, transition.fromY).type != 'r') {
+					return false;
+				}
+				if (castlingStatus(player) & (KingMoved | LeftRookMoved)) {
+					return false;
+				}
+			}
+			if (transition.fromX == 4 && (transition.fromY == 0 || transition.fromY == 7)) {
+				if (transition.fromY == transition.toY) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	//! Try to do castling without doing any checks whatsoever
+	//! note that fromX is assumed to be 0 or 7
+	void doCastlingUnchecked(BoardTransition transition) {
+		auto y = transition.fromY;
+
+		PlayerNum player = (transition.fromY == 0)? PlayerNum::Player1: PlayerNum::Player2;
+		castlingStatus(player) |= 0b0111; // All future castling disabled
+
+		std::swap(at(transition.fromX, y), at(transition.toX, y));
+		if (transition.toX == 6) {
+			std::swap(at(7, y), at(5, y));
+
+		}
+		else {
+			std::swap(at(0, y), at(3, y));
+		}
+	}
+
+
+	unsigned char castlingStatus(PlayerNum player) const {
+		return _castlingStatus[(player == PlayerNum::Player1)? 0: 1];
+	}
+
+	unsigned char &castlingStatus(PlayerNum player) {
+		if (player == Player1) {
+			return _castlingStatus[0];
+		}
+		else {
+			return _castlingStatus[1];
+		}
+	}
+
+
+	void kingMoved(PlayerNum player) {
+		castlingStatus(player) |= KingMoved;
+	}
+
+	void leftRookMoved(PlayerNum player) {
+		castlingStatus(player) |= LeftRookMoved;
+	}
+
+	void rightRookMoved(PlayerNum player) {
+		castlingStatus(player) |= RightRookMoved;
+	}
+
+	bool isKingMoved(PlayerNum player) const {
+		return castlingStatus(player) & KingMoved;
+	}
+
+	bool isLeftRookMoved(PlayerNum player) const {
+		return castlingStatus(player) & LeftRookMoved;
+	}
+
+	bool isRightRookMoved(PlayerNum player) const {
+		return castlingStatus(player) & RightRookMoved;
+	}
+
+	bool isCastlingValid(BoardTransition transition) const {
+		if (!isCastling(transition)) {
+			return false;
+		}
+
+		PlayerNum player = (transition.fromY == 0)? PlayerNum::Player1: PlayerNum::Player2;
+
+		if (isKingMoved(player)) {
+			return false;
+		}
+
+		auto y = transition.fromY;
+
+		// Check if
+		// 1. The path is free
+		// 2. Moving the king does not lead to chess at any point during the move
+		if (transition.toX > transition.fromX) {
+			if (isRightRookMoved(player)) {
+				return false;
+			}
+			for (int x = 5; x < 7; ++x) {
+				if (at(x, y).player) {
+					return false;
+				}
+				auto state = *this;
+				state.moveUnchecked({4, y, x, y});
+				if (state.isChess(player)) {
+					return false;
+				}
+			}
+		}
+		else {
+			if (isLeftRookMoved(player)) {
+				return false;
+			}
+			for (int x = 1; x < 4; ++x) {
+				if (at(x, y).player) {
+					return false;
+				}
+			}
+
+			for (int x = 2; x < 4; ++x) {
+				auto state = *this;
+				state.moveUnchecked({4, y, x, y});
+				if (state.isChess(player)) {
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
+
+	//! If the king or some rook is moved this will affect if castling is allowed
+	//! this function keeps track of what is allowed after a move
+	void markCastlingChange(int x, int y) {
+		auto player = PlayerNum::None;
+
+		if (y == 0) {
+			player = PlayerNum::Player1;
+		}
+		else if (y == 7) {
+			player = PlayerNum::Player2;
+		}
+		else {
+			return;
+		}
+
+		if (x == 0) {
+			castlingStatus(player) |= LeftRookMoved;
+		}
+		else if (x == 7) {
+			castlingStatus(player) |= RightRookMoved;
+		}
+		else if (x == 4) {
+			castlingStatus(player) |= KingMoved;
+		}
+	}
+
+	//! Make changes to state without checking if the move is valid
+	void moveUnchecked(BoardTransition transition) {
+		// Check if castling
+		auto &fromCell = at(transition.fromX, transition.fromY);
+		auto &toCell = at(transition.toX, transition.toY);
+
+		if (isCastling(transition)) {
+			doCastlingUnchecked(transition);
+		}
+		else {
+			toCell = {};
+			std::swap(toCell, fromCell);
+
+			markCastlingChange(transition.fromX, transition.fromY);
+		}
+	}
+
 	//! Move a piece and return true if successful
-	bool move(int fromX, int fromY, int toX, int toY, PlayerNum player) {
+	bool move(char fromX, char fromY, char toX, char toY, PlayerNum player) {
 		if (isMoveValid(fromX, fromY, toX, toY, player)) {
-			(*this)(toX, toY) = {};
-			std::swap((*this)(toX, toY), (*this)(fromX, fromY));
+			moveUnchecked({fromX, fromY, toX, toY});
 
 			return true;
 		}
 		else {
 			return false;
 		}
+	}
+
+	//! same as other move but using BoardTransition that is easier to store
+	bool move(BoardTransition transition, PlayerNum player) {
+		return move(
+				transition.fromX,
+				transition.fromY,
+				transition.toX,
+				transition.toY,
+				player);
 	}
 
 

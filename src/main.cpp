@@ -16,22 +16,19 @@ using namespace std;
 
 int main(int argc, char **argv) {
 	unique_ptr<IBoard> board(createBoard());
-
-	// Todo: Make more generic: support tcp connection
-//	unique_ptr<IConnection> connection1(createFIFOConnection("agent1r", "agent1s", true));
-//	unique_ptr<IConnection> connection2(createFIFOConnection("agent2r", "agent2s", true));
-
-
-	unique_ptr<IServer> server(createTCPServer(1234));
+	unique_ptr<IServer> server(createServer(argc, argv));
 
 	std::vector<unique_ptr<RemoteAgent>> agents;
 
-	server->callback([&](IConnection *connection) {
-		// Remove disconnected agents
+	auto removeDisconnectedAgents = [&]() {
 		agents.erase(remove_if(agents.begin(), agents.end(),
 				[](unique_ptr<RemoteAgent> &agent) {
 			return !agent->isRunning();
 		}), agents.end());
+	};
+
+	server->callback([&](IConnection *connection) {
+		removeDisconnectedAgents();
 
 		agents.emplace_back(
 				new RemoteAgent(*board, move(unique_ptr<IConnection>(connection))));
