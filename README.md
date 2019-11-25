@@ -18,7 +18,7 @@ cd auto-chess
 
 git submodule update --init
 
-make -j
+make
 
 ```
 

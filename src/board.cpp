@@ -60,10 +60,10 @@ public:
 
 	void wait(PlayerNum player) override {
 		if (player == 1 || player == 2) {
-			auto lock = lock_guard(_agents[player - 1].agentMutex);
+			lock_guard<mutex> lock(_agents[player - 1].agentMutex);
 		}
 		else {
-			auto lock = lock_guard(_agents[otherPlayer() - 1].agentMutex);
+			lock_guard<mutex> lock(_agents[otherPlayer() - 1].agentMutex);
 		}
 	}
 

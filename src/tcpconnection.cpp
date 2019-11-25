@@ -118,7 +118,7 @@ public:
 		return *this;
 	}
 
-	std::string read() {
+	std::string read() override {
 		std::array<char, 1024> buffer;
 		auto len = ::read(_socket, buffer.data(), buffer.size());
 		if (len <= 0) {
