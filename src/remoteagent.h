@@ -7,10 +7,10 @@
 
 #pragma once
 
-#include <thread>
-#include <string>
-#include <array>
 #include "iboard.h"
+#include <array>
+#include <string>
+#include <thread>
 
 class IConnection;
 
@@ -18,22 +18,23 @@ class IConnection;
 //! This is supposed to be used by the server when connecting to agents
 class RemoteAgent {
 public:
-	RemoteAgent(IBoard &board, std::unique_ptr<IConnection> &&connection);
-	~RemoteAgent();
+    RemoteAgent(IBoard &board, std::unique_ptr<IConnection> &&connection);
+    ~RemoteAgent();
 
-	void wait();
+    void wait();
 
-	bool isRunning() {
-		return _isRunning;
-	}
+    bool isRunning() {
+        return _isRunning;
+    }
+
 private:
-	void startThread();
-	IBoard &_board;
-	std::unique_ptr<IConnection> _connection;
-	std::thread _thread;
+    void startThread();
+    IBoard &_board;
+    std::unique_ptr<IConnection> _connection;
+    std::thread _thread;
 
-	std::string _name;
-	PlayerNum _playerNumber;
+    std::string _name;
+    PlayerNum _playerNumber;
 
-	bool _isRunning = true;
+    bool _isRunning = true;
 };

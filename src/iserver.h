@@ -11,13 +11,11 @@
 
 class IServer {
 public:
-	virtual ~IServer() {}
+    virtual ~IServer() {}
 
-	//! A callback that is called whenever a new connection is created
-	virtual void callback(std::function<void(class IConnection*)>) = 0;
+    //! A callback that is called whenever a new connection is created
+    virtual void callback(std::function<void(class IConnection *)>) = 0;
 
-	//! Wait and listen for new connections
-	virtual void listen() = 0;
+    //! Wait and listen for new connections
+    virtual void listen() = 0;
 };
-
-

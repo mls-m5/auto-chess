@@ -182,10 +182,9 @@ public:
         // Non blocking flags
         //		auto flags = fcntl(_socket, F_GETFL);
         //		if (flags > -1) {
-        //			if (fcntl(_socket, F_SETFL, flags | O_NONBLOCK) <
-        //0)
-        //{ 				throw runtime_error("failed setting
-        //listening socket to non-blocking");
+        //			if (fcntl(_socket, F_SETFL, flags | O_NONBLOCK)
+        //< 0) { 				throw runtime_error("failed
+        // setting listening socket to non-blocking");
         //			}
         //		}
 
