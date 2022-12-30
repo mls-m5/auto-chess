@@ -10,3 +10,12 @@ tests/*_test
 
 agents/human
 agents/monkey
+
+*.cflags
+*.config
+*.creator
+*.creator.user
+*.cxxflags
+*.files
+*.includes
+
