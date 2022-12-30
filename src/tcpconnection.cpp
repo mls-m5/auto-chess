@@ -233,10 +233,11 @@ private:
 
 } // namespace
 
-IServer *createTCPServer(short port) {
-    return new TCPServer(port);
+std::unique_ptr<IServer> createTCPServer(short port) {
+    return std::make_unique<TCPServer>(port);
 }
 
-IConnection *createTCPConnection(const std::string &hostname, short port) {
-    return new TCPConnection(hostname, port);
+std::unique_ptr<IConnection> createTCPConnection(const std::string &hostname,
+                                                 short port) {
+    return std::make_unique<TCPConnection>(hostname, port);
 }

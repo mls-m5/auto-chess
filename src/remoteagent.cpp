@@ -145,3 +145,7 @@ RemoteAgent::~RemoteAgent() {
 void RemoteAgent::wait() {
     _thread.join();
 }
+
+bool RemoteAgent::isRunning() {
+    return _isRunning;
+}

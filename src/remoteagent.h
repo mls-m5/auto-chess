@@ -19,13 +19,12 @@ class IConnection;
 class RemoteAgent {
 public:
     RemoteAgent(IBoard &board, std::unique_ptr<IConnection> &&connection);
+
     ~RemoteAgent();
 
     void wait();
 
-    bool isRunning() {
-        return _isRunning;
-    }
+    bool isRunning();
 
 private:
     void startThread();

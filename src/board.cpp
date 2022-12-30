@@ -3,6 +3,7 @@
 #include "iboard.h"
 #include <iostream>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -120,6 +121,6 @@ private:
     Agent &_agent2 = _agents[1];
 };
 
-IBoard *createBoard() {
-    return new Board;
+std::unique_ptr<IBoard> createBoard() {
+    return std::make_unique<Board>();
 }

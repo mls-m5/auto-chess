@@ -7,6 +7,7 @@
 
 #include "factoryfunctions.h"
 #include "iconnection.h"
+#include "iserver.h"
 
 using namespace std;
 
@@ -61,7 +62,7 @@ struct Arguments {
 
 } // namespace
 
-IConnection *createConnection(int argc, char **argv) {
+std::unique_ptr<IConnection> createConnection(int argc, char **argv) {
     Arguments args(argc, argv);
     switch (args.connectionType) {
     case Arguments::FIFO:
@@ -71,7 +72,7 @@ IConnection *createConnection(int argc, char **argv) {
     }
 }
 
-class IServer *createServer(int argc, char **argv) {
+std::unique_ptr<IServer> createServer(int argc, char **argv) {
     Arguments args(argc, argv);
     switch (args.connectionType) {
     case Arguments::FIFO:
