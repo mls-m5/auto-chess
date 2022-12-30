@@ -11,28 +11,26 @@
 #include "iserver.h"
 #include "remoteagent.h"
 
-using namespace std;
-
 int main(int argc, char **argv) {
-    unique_ptr<IBoard> board(createBoard());
-    unique_ptr<IServer> server(createServer(argc, argv));
+    auto board = createBoard();
+    auto server = createServer(argc, argv);
 
-    std::vector<unique_ptr<RemoteAgent>> agents;
+    std::vector<std::unique_ptr<RemoteAgent>> agents;
 
     auto removeDisconnectedAgents = [&]() {
         agents.erase(remove_if(agents.begin(),
                                agents.end(),
-                               [](unique_ptr<RemoteAgent> &agent) {
+                               [](std::unique_ptr<RemoteAgent> &agent) {
                                    return !agent->isRunning();
                                }),
                      agents.end());
     };
 
-    server->callback([&](IConnection *connection) {
+    server->callback([&](std::unique_ptr<IConnection> connection) {
         removeDisconnectedAgents();
 
         agents.emplace_back(
-            new RemoteAgent(*board, move(unique_ptr<IConnection>(connection))));
+            std::make_unique<RemoteAgent>(*board, std::move(connection)));
     });
 
     board->state().print();

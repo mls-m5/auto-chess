@@ -179,15 +179,6 @@ public:
         address.sin_addr.s_addr = INADDR_ANY;
         address.sin_port = htons(port);
 
-        // Non blocking flags
-        //		auto flags = fcntl(_socket, F_GETFL);
-        //		if (flags > -1) {
-        //			if (fcntl(_socket, F_SETFL, flags | O_NONBLOCK)
-        //< 0) { 				throw runtime_error("failed
-        // setting listening socket to non-blocking");
-        //			}
-        //		}
-
         // Bind socket to port
         if (::bind(_socket,
                    reinterpret_cast<sockaddr *>(&address),
@@ -214,21 +205,21 @@ public:
             if (newSocket > -1) {
                 // Add connection
                 if (_callback) {
-                    _callback(new TCPConnection(newSocket));
+                    _callback(std::make_unique<TCPConnection>(newSocket));
                 }
             }
             this_thread::sleep_for(.5s);
         }
     }
 
-    void callback(std::function<void(class IConnection *)> func) {
+    void callback(CallbackT func) {
         _callback = func;
     }
 
 private:
     int _socket = 0;
     int _active = true;
-    function<void(class IConnection *)> _callback;
+    CallbackT _callback;
 };
 
 } // namespace
