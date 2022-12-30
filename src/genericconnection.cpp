@@ -6,8 +6,12 @@
  */
 
 #include "factoryfunctions.h"
+#include "fifoconnection.h"
+#include "fifoserver.h"
 #include "iconnection.h"
 #include "iserver.h"
+#include "tcpconnection.h"
+#include "tcpserver.h"
 
 using namespace std;
 
@@ -62,13 +66,14 @@ struct Arguments {
 
 } // namespace
 
-std::unique_ptr<IConnection> createConnection(int argc, char **argv) {
+std::unique_ptr<IConnection> connect(int argc, char **argv) {
     Arguments args(argc, argv);
     switch (args.connectionType) {
     case Arguments::FIFO:
-        return createFIFOConnection(args.sendFilename1, args.receiveFilename1);
+        return std::make_unique<FIFOConnection>(args.sendFilename1,
+                                                args.receiveFilename1);
     default: // TCP
-        return createTCPConnection(args.hostname, args.port);
+        return std::make_unique<TCPConnection>(args.hostname, args.port);
     }
 }
 
@@ -76,11 +81,11 @@ std::unique_ptr<IServer> createServer(int argc, char **argv) {
     Arguments args(argc, argv);
     switch (args.connectionType) {
     case Arguments::FIFO:
-        return createFIFOServer(args.sendFilename1,
-                                args.receiveFilename1,
-                                args.sendFilename2,
-                                args.receiveFilename2);
+        return std::make_unique<FIFOServer>(args.sendFilename1,
+                                            args.receiveFilename1,
+                                            args.sendFilename2,
+                                            args.receiveFilename2);
     default: // TCP
-        return createTCPServer(args.port);
+        return std::make_unique<TCPServer>(args.port);
     }
 }
